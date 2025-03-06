@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Алгоритм Гилберта — Джонсона — Кирти, 2д фигуры, Javascript реализация</title>
+		<script src="js/vector.js"></script>
+		<script src="js/shape.js"></script>
+		<script src="js/drawhelper.js"></script>
+		<script src="js/gjk.js"></script>
+	</head>
+	<body>
+		<canvas id="gjk-canvas" width="1280" height="720" ></canvas>
+		<style>
+			#gjk-canvas {
+				margin: 0 auto;
+				width: 100%;
+			}
+		</style>
+		<script>
+			const canvas  = document.querySelector( "#gjk-canvas" );
+			const context = canvas.getContext( "2d" );
+			context.font  = "20px roboto";
+			const widthH  = parseInt( canvas.width / 2 );
+			const heightH = parseInt( canvas.height / 2 );
+			//Точки фигур
+			const figure1  = new Shape( [ new Vector3F( 0 , 1 ) , new Vector3F( 1 , -1 ) , new Vector3F( -1 , -1 ) ] );
+			const figure2  = new Shape( [ new Vector3F( 0 , 1 ) , new Vector3F( 1 , -1 ) , new Vector3F( -1 , -1 ) , new Vector3F( -1 , 1 ) ] );
+			const figscale = 50; //Масштаб отображения
+			//Константы для обработки движения
+			const moveSpeed       = 0.1;
+			const rotateSpeed     = 0.03;
+			let   rotateDirection = 1;
+			//Обработчик нажатий клавиш
+			window.addEventListener( "keydown" , function( e ) {
+				if( e.keyCode == 87 ) { //W
+					figure1.Translate( new Vector3F( 0 , -moveSpeed ) );
+				}
+				if( e.keyCode == 83 ) { //S
+					figure1.Translate( new Vector3F( 0 , moveSpeed ) );
+				}
+				if( e.keyCode == 65 ) { //A
+					figure1.Translate( new Vector3F( -moveSpeed , 0 ) );
+				}
+				if( e.keyCode == 68 ) { //D
+					figure1.Translate( new Vector3F( moveSpeed , 0 ) );
+				}
+				if( e.keyCode == 69 ) { //E
+					rotateDirection = 1;
+				}
+				if( e.keyCode == 81 ) { //Q
+					rotateDirection = -1;
+				}
+			});
+			//Инициализация самого алгоритма
+			const	gjkAlgrithm = new GJK();
+					gjkAlgrithm.SetFigures( figure1 , figure2 );
+					gjkAlgrithm.SetDirection( new Vector3F( -1 , 1 ) );
+			//Вывод текста сообщения вверху экрана
+			const text     = "WSAD для перемещения | QE для смены направления вращения";
+			const textInfo = context.measureText( text );
+			const textPos  = parseInt( widthH - textInfo.width * 0.5 );
+			//Основной цикл
+			function Frame() {
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				context.fillText( text , textPos , 50 );
+				DrawScale();
+				figure1.Update();
+				figure2.Update();
+				figure1.Draw();
+				figure2.Draw();
+				let collision = gjkAlgrithm.CheckCollision();
+				( collision ) ? figure1.SetColor( "red" ) : figure1.SetColor( "orange" );
+				( collision ) ? figure2.SetColor( "red" ) : figure2.SetColor( "orange" );
+				figure1.Rotate( rotateSpeed * rotateDirection );
+				window.requestAnimationFrame( Frame );
+			}
+			window.requestAnimationFrame( Frame );
+		</script>
+	</body>
+</html>
